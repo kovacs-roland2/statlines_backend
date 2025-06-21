@@ -5,6 +5,7 @@ from pathlib import Path
 import json
 import sys
 import os
+from scrapers.scrape_team_stats import FBrefScraper
 
 # Add the project root to Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -51,5 +52,5 @@ async def run_scraper(scraper_class):
         scraper.cleanup()
 
 if __name__ == "__main__":
-    from scrapers.fbref_scraper import FBrefScraper
+    
     asyncio.run(run_scraper(FBrefScraper)) 
