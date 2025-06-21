@@ -1,0 +1,24 @@
+# Docker Compose for StatLines Backend
+# Use this for production deployment or when you prefer containerized development
+# For local development, you can use local PostgreSQL instead (see README)
+# 
+# Make sure to set these environment variables or use a .env file:
+# POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: statlines_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-statlines}
+      POSTGRES_USER: ${POSTGRES_USER:-statlines_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+volumes:
+  postgres_data: 
