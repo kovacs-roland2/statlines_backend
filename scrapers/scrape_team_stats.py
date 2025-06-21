@@ -1,5 +1,4 @@
 from typing import Dict, List, Any
-import pandas as pd
 from bs4 import BeautifulSoup
 from .base import BaseScraper
 import re
