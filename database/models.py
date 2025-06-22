@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, Text, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Date, Time, DateTime, ForeignKey
 from sqlalchemy.sql.sqltypes import Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -38,8 +38,6 @@ class Match(Base):
     venue = Column(String(100))
     attendance = Column(Integer)
     referee = Column(String(100))
-    match_report_url = Column(Text)
-    notes = Column(Text)
     scraped_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -49,20 +47,3 @@ class Match(Base):
 
     def __repr__(self):
         return f"<Match(id={self.id}, date={self.match_date}, home_team_id={self.home_team_id}, away_team_id={self.away_team_id})>"
-
-    @property
-    def result(self):
-        """Return match result as string (e.g., '2-1')"""
-        if self.home_score is not None and self.away_score is not None:
-            return f"{self.home_score}-{self.away_score}"
-        return None
-
-    @property
-    def winner_id(self):
-        """Return the ID of the winning team, or None for a draw"""
-        if self.home_score is not None and self.away_score is not None:
-            if self.home_score > self.away_score:
-                return self.home_team_id
-            elif self.away_score > self.home_score:
-                return self.away_team_id
-        return None  # Draw or incomplete match 
