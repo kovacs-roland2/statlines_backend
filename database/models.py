@@ -30,6 +30,7 @@ class Competition(Base):
 
     # Relationships
     matches = relationship("Match", back_populates="competition")
+    teams = relationship("Team", back_populates="competition")
 
     def __repr__(self):
         return f"<Competition(id={self.id}, name='{self.name}', fbref_id={self.fbref_id})>"
@@ -40,10 +41,12 @@ class Team(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(100), unique=True, nullable=False, index=True)
     short_name = Column(String(20))
+    competition_id = Column(Integer, ForeignKey("competitions.id"), index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     # Relationships
+    competition = relationship("Competition", back_populates="teams")
     home_matches = relationship("Match", foreign_keys="Match.home_team_id", back_populates="home_team")
     away_matches = relationship("Match", foreign_keys="Match.away_team_id", back_populates="away_team")
 

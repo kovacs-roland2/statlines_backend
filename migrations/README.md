@@ -44,6 +44,7 @@ def run_migration():
 ### Migration History
 
 - `001_add_competitions.py` - Add competitions table and competition_id to matches for multi-league support
+- `002_add_competition_to_teams.py` - Add competition_id to teams table to associate teams with competitions
 
 ### Best Practices
 
