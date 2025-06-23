@@ -164,10 +164,10 @@ Examples:
     
     # Exit with appropriate code
     if success:
-        logger.info("✅ Scraper completed successfully")
+        logger.info("Scraper completed successfully")
         sys.exit(0)
     else:
-        logger.error("❌ Scraper failed")
+        logger.error("Scraper failed")
         sys.exit(1)
 
 if __name__ == "__main__":
