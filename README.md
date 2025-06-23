@@ -156,13 +156,22 @@ psql -U postgres -d statlines_dev
 
 ```
 statlines_backend/
+├── api/                # API endpoints and routers
+│   ├── __init__.py    # API package initialization
+│   └── teams.py       # Team-related endpoints (matches, etc.)
 ├── database/           # Database models and configuration
 │   ├── __init__.py
-│   ├── models.py      # SQLAlchemy models (Team, Match)
+│   ├── models.py      # SQLAlchemy models (Team, Match, Competition)
 │   └── config.py      # Database connection setup
+├── migrations/         # Database migration scripts
+│   ├── README.md      # Migration documentation
+│   ├── 001_add_competitions.py
+│   └── 002_add_competition_to_teams.py
 ├── scrapers/          # Web scraping modules
+│   └── scrape_matches.py # Match data scraper
 ├── scripts/           # Utility scripts
 ├── test/             # Test files
+├── data/             # Generated data files (CSV exports)
 ├── main.py           # FastAPI application entry point
 ├── requirements.txt  # Python dependencies
 ├── docker-compose.yml # Docker configuration
@@ -258,6 +267,210 @@ python -m pytest test/
 ## 📝 License
 
 This project is licensed under the MIT License.
+
+## API Endpoints
+
+The backend provides a REST API for accessing match data. The server runs on `http://localhost:8000` by default.
+
+### Get Team Matches
+
+**Endpoint**: `GET /api/teams/{team_name}/matches`
+
+Returns the last N matches for a specific team.
+
+**Parameters**:
+- `team_name` (path): Name of the team (case-insensitive, partial match supported)
+- `limit` (query, optional): Number of matches to return (default: 5, max: 20)
+
+**Example Requests**:
+```bash
+# Get Arsenal's last 5 matches
+curl "http://localhost:8000/api/teams/Arsenal/matches"
+
+# Get Liverpool's last 3 matches (partial name match)
+curl "http://localhost:8000/api/teams/liver/matches?limit=3"
+
+# Get Manchester City's last 10 matches
+curl "http://localhost:8000/api/teams/Manchester%20City/matches?limit=10"
+```
+
+**Example Response**:
+```json
+{
+  "team_name": "Arsenal",
+  "matches": [
+    {
+      "id": 375,
+      "match_date": "2025-05-25",
+      "match_time": "16:00:00",
+      "week_number": 38,
+      "home_team": {
+        "id": 22,
+        "name": "Southampton",
+        "short_name": "SOU"
+      },
+      "away_team": {
+        "id": 1,
+        "name": "Arsenal",
+        "short_name": "ARS"
+      },
+      "home_score": 1,
+      "away_score": 2,
+      "home_xg": 0.6,
+      "away_xg": 2.3,
+      "venue": "St Mary's Stadium",
+      "attendance": 31289,
+      "referee": "Darren Bond",
+      "competition": "Premier League",
+      "is_home_match": false
+    }
+  ],
+  "total_matches_found": 1
+}
+```
+
+### API Documentation
+
+Interactive API documentation is available at:
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
+
+## Frontend Integration
+
+### Next.js Example
+
+Here's how to integrate the API with a Next.js frontend:
+
+```typescript
+// types/match.ts
+export interface TeamInfo {
+  id: number;
+  name: string;
+  short_name?: string;
+}
+
+export interface Match {
+  id: number;
+  match_date: string;
+  match_time?: string;
+  week_number?: number;
+  home_team: TeamInfo;
+  away_team: TeamInfo;
+  home_score?: number;
+  away_score?: number;
+  home_xg?: number;
+  away_xg?: number;
+  venue?: string;
+  attendance?: number;
+  referee?: string;
+  competition: string;
+  is_home_match: boolean;
+}
+
+export interface TeamMatchesResponse {
+  team_name: string;
+  matches: Match[];
+  total_matches_found: number;
+}
+```
+
+```typescript
+// lib/api.ts
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+export async function getTeamMatches(
+  teamName: string, 
+  limit: number = 5
+): Promise<TeamMatchesResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/teams/${encodeURIComponent(teamName)}/matches?limit=${limit}`
+  );
+  
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to fetch team matches');
+  }
+  
+  return response.json();
+}
+```
+
+```tsx
+// components/TeamMatches.tsx
+import { useState, useEffect } from 'react';
+import { getTeamMatches, TeamMatchesResponse } from '../lib/api';
+
+interface TeamMatchesProps {
+  teamName: string;
+}
+
+export default function TeamMatches({ teamName }: TeamMatchesProps) {
+  const [data, setData] = useState<TeamMatchesResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchMatches() {
+      try {
+        setLoading(true);
+        const result = await getTeamMatches(teamName, 5);
+        setData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMatches();
+  }, [teamName]);
+
+  if (loading) return <div>Loading matches...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!data) return <div>No data found</div>;
+
+  return (
+    <div>
+      <h2>{data.team_name} - Recent Matches</h2>
+      <div className="matches-list">
+        {data.matches.map((match) => (
+          <div key={match.id} className="match-card">
+            <div className="match-date">
+              {new Date(match.match_date).toLocaleDateString()}
+            </div>
+            <div className="match-teams">
+              {match.home_team.name} {match.home_score ?? '?'} - {match.away_score ?? '?'} {match.away_team.name}
+            </div>
+            <div className="match-details">
+              {match.venue && <span>📍 {match.venue}</span>}
+              {match.attendance && <span>👥 {match.attendance.toLocaleString()}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+### React Query Integration
+
+For better caching and state management:
+
+```typescript
+// hooks/useTeamMatches.ts
+import { useQuery } from '@tanstack/react-query';
+import { getTeamMatches } from '../lib/api';
+
+export function useTeamMatches(teamName: string, limit: number = 5) {
+  return useQuery({
+    queryKey: ['teamMatches', teamName, limit],
+    queryFn: () => getTeamMatches(teamName, limit),
+    enabled: !!teamName,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+```
 
 ---
 

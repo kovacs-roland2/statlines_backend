@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+# Import API routers
+from api.teams import router as teams_router
+
 app = FastAPI(
     title="StatLines API",
     description="Backend API for StatLines application",
@@ -15,6 +18,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include API routers
+app.include_router(teams_router)
 
 @app.get("/")
 async def root():
