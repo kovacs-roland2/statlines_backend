@@ -80,3 +80,38 @@ class Match(Base):
 
     def __repr__(self):
         return f"<Match(id={self.id}, date={self.match_date}, home_team_id={self.home_team_id}, away_team_id={self.away_team_id})>"
+
+class TeamOverallTableResults(Base):
+    __tablename__ = "team_overall_table_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    season = Column(String(20), nullable=False, index=True)  # e.g., "2023-24"
+    rk = Column(Integer)  # Rank
+    squad = Column(String(100), nullable=False)  # Team name as it appears in the table
+    mp = Column(Integer)  # Matches played
+    w = Column(Integer)   # Wins
+    d = Column(Integer)   # Draws
+    l = Column(Integer)   # Losses
+    gf = Column(Integer)  # Goals for
+    ga = Column(Integer)  # Goals against
+    gd = Column(Integer)  # Goal difference
+    pts = Column(Integer) # Points
+    pts_per_mp = Column(Numeric(4, 2))  # Points per match played
+    xg = Column(Numeric(5, 2))   # Expected goals
+    xga = Column(Numeric(5, 2))  # Expected goals against
+    xgd = Column(Numeric(5, 2))  # Expected goal difference
+    xgd_per_90 = Column(Numeric(4, 3))  # Expected goal difference per 90 minutes
+    scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    competition = relationship("Competition")
+    team = relationship("Team")
+
+    def __repr__(self):
+        return f"<TeamOverallTableResults(id={self.id}, squad='{self.squad}', season='{self.season}', rk={self.rk})>"
+
+    class Config:
+        from_attributes = True
