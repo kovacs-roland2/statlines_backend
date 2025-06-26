@@ -115,3 +115,53 @@ class TeamOverallTableResults(Base):
 
     class Config:
         from_attributes = True
+
+class TeamHomeAwayTableResults(Base):
+    __tablename__ = "team_home_away_table_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    season = Column(String(20), nullable=False, index=True)
+
+    # Home columns
+    home_mp = Column(Integer)
+    home_w = Column(Integer)
+    home_d = Column(Integer)
+    home_l = Column(Integer)
+    home_gf = Column(Integer)
+    home_ga = Column(Integer)
+    home_gd = Column(Integer)
+    home_pts = Column(Integer)
+    home_pts_per_mp = Column(Numeric(4, 2))
+    home_xg = Column(Numeric(5, 2))
+    home_xga = Column(Numeric(5, 2))
+    home_xgd = Column(Numeric(5, 2))
+    home_xgd_per_90 = Column(Numeric(4, 3))
+
+    # Away columns
+    away_mp = Column(Integer)
+    away_w = Column(Integer)
+    away_d = Column(Integer)
+    away_l = Column(Integer)
+    away_gf = Column(Integer)
+    away_ga = Column(Integer)
+    away_gd = Column(Integer)
+    away_pts = Column(Integer)
+    away_pts_per_mp = Column(Numeric(4, 2))
+    away_xg = Column(Numeric(5, 2))
+    away_xga = Column(Numeric(5, 2))
+    away_xgd = Column(Numeric(5, 2))
+    away_xgd_per_90 = Column(Numeric(4, 3))
+
+    scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    competition = relationship("Competition")
+    team = relationship("Team")
+
+    def __repr__(self):
+        return f"<TeamHomeAwayTableResults(id={self.id}, team_id={self.team_id}, season='{self.season}')>"
+
+    class Config:
+        from_attributes = True
