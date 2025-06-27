@@ -11,6 +11,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from database.config import get_db_session, create_tables
 from database.models import Match, Team, Competition
+from common.mappings.teams import get_standardized_team_name
+from common.mappings.competitions import (
+    get_competition_url,
+    PREMIER_LEAGUE_ID,
+    LA_LIGA_ID,
+    BUNDESLIGA_ID,
+    SERIE_A_ID,
+    LIGUE_1_ID
+)
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import func
 
@@ -25,7 +34,6 @@ def parse_date(date_str):
             return datetime.strptime(date_str, '%Y-%m-%d').date()
         else:
             # Handle format like "Fri, Aug 16"
-            # We'll need to add the current year
             current_year = datetime.now().year
             date_with_year = f"{date_str}, {current_year}"
             return datetime.strptime(date_with_year, '%a, %b %d, %Y').date()
@@ -101,40 +109,8 @@ def get_team_id_by_name(team_name, session, competition_id=None):
     if not team_name:
         return None
     
-    # Direct mapping for common team name variations
-    team_name_mapping = {
-        'Arsenal': 'Arsenal',
-        'Aston Villa': 'Aston Villa', 
-        'Bournemouth': 'Bournemouth',
-        'Brentford': 'Brentford',
-        'Brighton & Hove Albion': 'Brighton & Hove Albion',
-        'Brighton': 'Brighton & Hove Albion',
-        'Chelsea': 'Chelsea',
-        'Crystal Palace': 'Crystal Palace',
-        'Everton': 'Everton',
-        'Fulham': 'Fulham',
-        'Liverpool': 'Liverpool',
-        'Manchester City': 'Manchester City',
-        'Tottenham Hotspur': 'Tottenham Hotspur',
-        'Tottenham': 'Tottenham Hotspur',
-        'West Ham United': 'West Ham United',
-        'West Ham': 'West Ham United',
-        # Map scraped names to database names
-        'Leicester City': 'Leicester City',
-        'Nott\'ham Forest': 'Nottingham Forest',
-        'Nottingham Forest': 'Nottingham Forest', 
-        'Newcastle Utd': 'Newcastle United',
-        'Newcastle United': 'Newcastle United',
-        'Southampton': 'Southampton',
-        'Ipswich Town': 'Ipswich Town',
-        'Wolves': 'Wolverhampton Wanderers',
-        'Wolverhampton Wanderers': 'Wolverhampton Wanderers',
-        'Manchester Utd': 'Manchester United',
-        'Manchester United': 'Manchester United'
-    }
-    
-    # Use mapping if available
-    mapped_name = team_name_mapping.get(team_name, team_name)
+    # Get standardized team name
+    mapped_name = get_standardized_team_name(team_name)
     
     # Try to find team by mapped name and competition
     query = session.query(Team).filter(Team.name == mapped_name)
@@ -282,14 +258,7 @@ def save_match_to_db(session, match_data, competition_id=None):
 
 def get_competition_url(competition_fbref_id):
     """Get the FBref URL for a given competition ID."""
-    competition_urls = {
-        9: "https://fbref.com/en/comps/9/schedule/Premier-League-Scores-and-Fixtures",
-        12: "https://fbref.com/en/comps/12/schedule/La-Liga-Scores-and-Fixtures", 
-        20: "https://fbref.com/en/comps/20/schedule/Bundesliga-Scores-and-Fixtures",
-        11: "https://fbref.com/en/comps/11/schedule/Serie-A-Scores-and-Fixtures",
-        13: "https://fbref.com/en/comps/13/schedule/Ligue-1-Scores-and-Fixtures"
-    }
-    return competition_urls.get(competition_fbref_id)
+    return get_competition_url(competition_fbref_id)
 
 def find_schedule_table(soup):
     """Find the schedule table in the parsed HTML."""
@@ -347,7 +316,7 @@ def process_table_row(tr, headers_list):
         }
     return None
 
-def get_match_results(competition_fbref_id=9):
+def get_match_results(competition_fbref_id=PREMIER_LEAGUE_ID):
     """Scrape match results from FBref and save to database."""
     url = get_competition_url(competition_fbref_id)
     if not url:
@@ -412,8 +381,9 @@ def get_match_results(competition_fbref_id=9):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Scrape match data from FBref')
-    parser.add_argument('--competition', type=int, default=9, 
-                       help='FBref competition ID (9=Premier League, 12=La Liga, 20=Bundesliga, 11=Serie A, 13=Ligue 1)')
+    parser.add_argument('--competition', type=int, default=PREMIER_LEAGUE_ID, 
+                       help=f'FBref competition ID ({PREMIER_LEAGUE_ID}=Premier League, {LA_LIGA_ID}=La Liga, '
+                            f'{BUNDESLIGA_ID}=Bundesliga, {SERIE_A_ID}=Serie A, {LIGUE_1_ID}=Ligue 1)')
     
     args = parser.parse_args()
     

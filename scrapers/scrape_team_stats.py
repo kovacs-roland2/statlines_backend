@@ -2,11 +2,17 @@ from typing import Dict, List, Any
 from bs4 import BeautifulSoup
 from .base import BaseScraper
 import re
+from database.config import get_db_session
+from .tables.overall_results import OverallResultsTableScraper
+from .tables.home_away_results import HomeAwayResultsTableScraper
+import logging
+
+logger = logging.getLogger(__name__)
 
 class FBrefScraper(BaseScraper):
     """Scraper for FBref Premier League statistics."""
     
-    def __init__(self):
+    def __init__(self, season: str = "2024-25", competition_name: str = "Premier League"):
         super().__init__(
             base_url="https://fbref.com/en/comps/9/Premier-League-Stats",
             headers={
@@ -17,12 +23,18 @@ class FBrefScraper(BaseScraper):
             }
         )
         self.min_request_interval = 3  # FBref is sensitive to frequent requests
+        self.season = season
+        self.competition_name = competition_name
+        
+        # Initialize table scrapers
+        self.overall_results_scraper = OverallResultsTableScraper(season, competition_name)
+        self.home_away_results_scraper = HomeAwayResultsTableScraper(season, competition_name)
 
     def _clean_text(self, text: str) -> str:
         """Clean text by removing extra whitespace and special characters."""
         return re.sub(r'\s+', ' ', text).strip()
 
-    def _extract_tables(self,soup: BeautifulSoup) -> dict:
+    def _extract_tables(self, soup: BeautifulSoup) -> dict:
         """Extract all tables from the parsed HTML."""
         tables_data = {}
         tables = soup.find_all('table')
@@ -44,10 +56,9 @@ class FBrefScraper(BaseScraper):
         
         return tables_data
 
-
     async def scrape(self) -> Dict[str, List[Dict[str, Any]]]:
         """
-        Scrape all tables from the Premier League stats page.
+        Scrape all tables from the Premier League stats page and save to database.
         Returns a dictionary with table names as keys and table data as values.
         """
         try:
@@ -56,8 +67,17 @@ class FBrefScraper(BaseScraper):
             
             tables_data = self._extract_tables(soup)
             
+            # Get database session
+            db = get_db_session()
+            try:
+                # Save team stats to database using specialized scrapers
+                self.overall_results_scraper.save_to_db(tables_data, db)
+                self.home_away_results_scraper.save_to_db(tables_data, db)
+            finally:
+                db.close()
+            
             return tables_data
             
         except Exception as e:
-            self.logger.error(f"Error scraping FBref: {str(e)}")
+            logger.error(f"Error scraping FBref: {str(e)}")
             raise 
