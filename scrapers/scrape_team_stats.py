@@ -10,7 +10,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class FBrefScraper(BaseScraper):
-    """Scraper for FBref Premier League statistics."""
+    """Scraper for FBref football league teams' statistics."""
     
     def __init__(self, season: str = "2024-25", competition_name: str = "Premier League"):
         super().__init__(
@@ -58,7 +58,7 @@ class FBrefScraper(BaseScraper):
 
     async def scrape(self) -> Dict[str, List[Dict[str, Any]]]:
         """
-        Scrape all tables from the Premier League stats page and save to database.
+        Scrape all tables from the team stats page and save to database.
         Returns a dictionary with table names as keys and table data as values.
         """
         try:

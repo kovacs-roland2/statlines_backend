@@ -1,9 +1,9 @@
 """Base class for table-specific scrapers."""
 
-from typing import Dict, List
 from sqlalchemy.orm import Session
 from database.models import Competition, Team
 from sqlalchemy import select
+from common.mappings.teams import get_standardized_team_name
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,24 +34,28 @@ class BaseTableScraper:
 
     def _get_or_create_team(self, db: Session, team_name: str, competition_id: int) -> Team:
         """Get or create team record."""
+        # Get standardized team name
+        standardized_name = get_standardized_team_name(team_name)
+        
+        # First try to find team by standardized name
         team = db.execute(
-            select(Team).where(Team.name == team_name)
+            select(Team).where(Team.name == standardized_name)
         ).scalar_one_or_none()
         
         if not team:
             team = Team(
-                name=team_name,
+                name=standardized_name,  # Use standardized name for new teams
                 competition_id=competition_id
             )
             db.add(team)
             db.commit()
             db.refresh(team)
-            logger.info(f"Created new team: {team_name}")
+            logger.info(f"Created new team: {standardized_name}")
         
         return team
 
     def _parse_numeric_value(self, value: str) -> float:
-        """Parse numeric values, handling different formats."""
+        """Parse value to float or None if it's not a number."""
         if not value or value == '':
             return None
         
@@ -61,7 +65,3 @@ class BaseTableScraper:
             return float(value)
         except ValueError:
             return None
-
-    def save_to_db(self, tables_data: Dict[str, List[List[str]]], db: Session) -> None:
-        """Save table data to database. To be implemented by child classes."""
-        raise NotImplementedError("Child classes must implement save_to_db method.") 
