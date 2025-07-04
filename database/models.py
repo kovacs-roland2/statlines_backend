@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Date, Time, DateTime, ForeignKey, Text, Float
 from sqlalchemy.sql.sqltypes import Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -162,6 +162,59 @@ class TeamHomeAwayTableResults(Base):
 
     def __repr__(self):
         return f"<TeamHomeAwayTableResults(id={self.id}, team_id={self.team_id}, season='{self.season}')>"
+
+    class Config:
+        from_attributes = True
+
+class TeamSquadStandardFor(Base):
+    """Team squad standard for stats."""
+    
+    __tablename__ = 'team_squad_standard_for'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    season = Column(String(20), nullable=False, index=True)
+    player_number = Column(Integer)
+    age = Column(Float)
+    possession = Column(Float)
+    matches_played = Column(Integer)
+    matches_started = Column(Integer)
+    minutes_played = Column(Integer)
+    minutes_played_90s = Column(Float)
+    goals = Column(Integer)
+    assists = Column(Integer)
+    goals_and_assists = Column(Integer)
+    goals_minus_penalties = Column(Integer)
+    penalties = Column(Integer)
+    penalties_attempted = Column(Integer)
+    yellow_cards = Column(Integer)
+    red_cards = Column(Integer)
+    expected_goals = Column(Float)
+    non_penalty_expected_goals = Column(Float)
+    expected_assisted_goals = Column(Float)
+    npxg_plus_xag = Column(Float)
+    progressive_carries = Column(Integer)
+    progressive_passes = Column(Integer)
+    goals_per90 = Column(Float)
+    assists_per90 = Column(Float)
+    goals_and_assists_per90 = Column(Float)
+    goals_minus_penalties_per90 = Column(Float)
+    goals_and_assists_minus_penalties_per90 = Column(Float)
+    expected_goals_per90 = Column(Float)
+    expected_assisted_goals_per90 = Column(Float)
+    expected_goals_and_assists_per90 = Column(Float)
+    non_penalty_expected_goals_per90 = Column(Float)
+    npxg_plus_xag_per90 = Column(Float)
+    scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    competition = relationship("Competition")
+    team = relationship("Team")
+
+    def __repr__(self):
+        return f"<TeamSquadStandardFor(id={self.id}, squad='{self.squad}', season='{self.season}'>"
 
     class Config:
         from_attributes = True
