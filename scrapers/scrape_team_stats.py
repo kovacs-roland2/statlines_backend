@@ -8,6 +8,7 @@ from .tables.home_away_results import HomeAwayResultsTableScraper
 from .tables.squad_standard_for import SquadStandardForScraper
 from .tables.squad_standard_against import SquadStandardAgainstScraper
 from .tables.squad_keeper_for import SquadKeeperForScraper
+from .tables.squad_keeper_against import SquadKeeperAgainstScraper
 import logging
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class FBrefScraper(BaseScraper):
         self.squad_standard_for_scraper = SquadStandardForScraper(season, competition_name)
         self.squad_standard_against_scraper = SquadStandardAgainstScraper(season, competition_name)
         self.squad_keeper_for_scraper = SquadKeeperForScraper(season, competition_name)
-
+        self.squad_keeper_against_scraper = SquadKeeperAgainstScraper(season, competition_name)
     def _clean_text(self, text: str) -> str:
         """Clean text by removing extra whitespace and special characters."""
         return re.sub(r'\s+', ' ', text).strip()
@@ -82,6 +83,7 @@ class FBrefScraper(BaseScraper):
                 self.squad_standard_for_scraper.save_to_db(tables_data, db)
                 self.squad_standard_against_scraper.save_to_db(tables_data, db)
                 self.squad_keeper_for_scraper.save_to_db(tables_data, db)
+                self.squad_keeper_against_scraper.save_to_db(tables_data, db)
             finally:
                 db.close()
             

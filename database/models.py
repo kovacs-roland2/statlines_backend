@@ -313,3 +313,45 @@ class TeamSquadKeeperFor(Base):
 
     class Config:
         from_attributes = True
+
+class TeamSquadKeeperAgainst(Base):
+    """Team squad keeper against stats."""
+    
+    __tablename__ = 'team_squad_keeper_against'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    season = Column(String(20), nullable=False, index=True)
+    player_number = Column(Integer)
+    matches_played = Column(Integer)
+    matches_started = Column(Integer)
+    minutes_played = Column(Integer)
+    minutes_played_90s = Column(Float)
+    goals_against = Column(Integer)
+    goals_against_90s = Column(Float)
+    shot_on_target_against = Column(Integer)
+    saves = Column(Integer)
+    save_percentage = Column(Float)
+    wins = Column(Integer)
+    draws = Column(Integer)
+    losses = Column(Integer)
+    clean_sheets = Column(Integer)
+    clean_sheets_percentage = Column(Float)
+    penalties_attempted = Column(Integer)
+    penalties_allowed = Column(Integer)
+    penalties_saved = Column(Integer)
+    penalties_missed = Column(Integer)
+    penalties_saved_percentage = Column(Float)
+    scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    competition = relationship("Competition")
+    team = relationship("Team")
+
+    def __repr__(self):
+        return f"<TeamSquadKeeperAgainst(id={self.id}, squad='{self.squad}', season='{self.season}'>"
+
+    class Config:
+        from_attributes = True
