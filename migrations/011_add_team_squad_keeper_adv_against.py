@@ -1,4 +1,4 @@
-"""Migration to add team_squad_keeper_adv_for table."""
+"""Migration to add team_squad_keeper_adv_against table."""
 
 import sys
 import os
@@ -7,14 +7,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.config import get_db_session
 from sqlalchemy import text
 
-DESCRIPTION = "Add team_squad_keeper_adv_for table for storing advanced team squad keeper statistics including season and competition data."
+DESCRIPTION = "Add team_squad_keeper_adv_against table for storing advanced team squad keeper statistics including season and competition data."
 
 def run_migration() -> None:
     session = get_db_session()
     try:
-        print("Starting migration: Add team_squad_keeper_adv_for table...")
+        print("Starting migration: Add team_squad_keeper_adv_against table...")
         session.execute(text("""
-            CREATE TABLE team_squad_keeper_adv_for (
+            CREATE TABLE team_squad_keeper_adv_against (
                 id SERIAL PRIMARY KEY,
                 competition_id INTEGER NOT NULL REFERENCES competitions(id),
                 team_id INTEGER NOT NULL REFERENCES teams(id),
@@ -29,7 +29,6 @@ def run_migration() -> None:
                 completed_long_balls INTEGER,
                 attempted_long_balls INTEGER,
                 long_balls_completed_percentage FLOAT,
-                penalties_saved_percentage FLOAT,
                 passes_attempted INTEGER,
                 throws_attempted INTEGER,
                 launch_percentage FLOAT,
@@ -52,10 +51,10 @@ def run_migration() -> None:
 
         print("Adding indexes...")
         indexes = [
-            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_for_competition ON team_squad_keeper_adv_for(competition_id)",
-            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_for_team ON team_squad_keeper_adv_for(team_id)",
-            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_for_season ON team_squad_keeper_adv_for(season)",
-            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_for_unique ON team_squad_keeper_adv_for(team_id, season, competition_id)"
+            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_against_competition ON team_squad_keeper_adv_against(competition_id)",
+            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_against_team ON team_squad_keeper_adv_against(team_id)",
+            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_against_season ON team_squad_keeper_adv_against(season)",
+            "CREATE INDEX IF NOT EXISTS idx_team_squad_keeper_adv_against_unique ON team_squad_keeper_adv_against(team_id, season, competition_id)"
         ]
         for index_sql in indexes:
             try:
@@ -71,7 +70,7 @@ def run_migration() -> None:
         print("Adding unique constraint...")
         try:
             session.execute(text("""
-                ALTER TABLE team_squad_keeper_adv_for
+                ALTER TABLE team_squad_keeper_adv_against
                 ADD CONSTRAINT uk_team_squad_standard_keeper_against
                 UNIQUE (team_id, season, competition_id)
             """))
@@ -95,8 +94,8 @@ def run_migration() -> None:
                 $$ language 'plpgsql'
             """))
             session.execute(text("""
-                CREATE TRIGGER update_team_squad_keeper_adv_for_updated_at 
-                BEFORE UPDATE ON team_squad_keeper_adv_for
+                CREATE TRIGGER update_team_squad_keeper_adv_against_updated_at 
+                BEFORE UPDATE ON team_squad_keeper_adv_against
                 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
             """))
             session.commit()
@@ -112,13 +111,13 @@ def run_migration() -> None:
             SELECT EXISTS (
                 SELECT FROM information_schema.tables 
                 WHERE table_schema = 'public' 
-                AND table_name = 'team_squad_keeper_adv_for'
+                AND table_name = 'team_squad_keeper_adv_against'
             )
         """)).scalar()
         if table_exists:
-            print("team_squad_keeper_adv_for table created successfully!")
+            print("team_squad_keeper_adv_against table created successfully!")
         else:
-            raise Exception("team_squad_keeper_adv_for table was not created")
+            raise Exception("team_squad_keeper_adv_against table was not created")
         print("Migration completed successfully!")
     except Exception as e:
         print(f"Migration failed: {e}")
