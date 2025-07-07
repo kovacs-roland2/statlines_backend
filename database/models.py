@@ -355,3 +355,95 @@ class TeamSquadKeeperAgainst(Base):
 
     class Config:
         from_attributes = True
+
+class TeamSquadKeeperAdvFor(Base):
+    """Team squad keeper advanced for stats."""
+    
+    __tablename__ = 'team_squad_keeper_adv_for'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    season = Column(String(20), nullable=False, index=True)
+    free_kick_goals_against = Column(Integer)
+    corner_kick_goals_against = Column(Integer)
+    own_goals_against = Column(Integer)
+    post_shot_xg = Column(Float)
+    post_shot_xg_per_shot_ot = Column(Float)
+    post_shot_xg_minus_goals_allowed = Column(Float)
+    post_shot_xg_minus_goals_allowed_90s = Column(Float)
+    completed_long_balls = Column(Integer)
+    attempted_long_balls = Column(Integer)
+    long_balls_completed_percentage = Column(Float)
+    passes_attempted = Column(Integer)
+    throws_attempted = Column(Integer)
+    launch_percentage = Column(Float)
+    avg_pass_length = Column(Float)
+    goal_kicks = Column(Integer)
+    goal_kicks_launched_percentage = Column(Float)
+    goal_kicks_avg_length = Column(Float)
+    crosses_faced = Column(Integer)
+    crosses_stopped = Column(Integer)
+    crosses_stopped_percentage = Column(Float)
+    def_actions_outside_of_penalty_area = Column(Integer)
+    def_actions_outside_of_penalty_area_90s = Column(Float)
+    avg_def_action_dist = Column(Float)
+    
+    scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    competition = relationship("Competition")
+    team = relationship("Team")
+
+    def __repr__(self):
+        return f"<TeamSquadKeeperAdvFor(id={self.id}, squad='{self.squad}', season='{self.season}'>"
+
+    class Config:
+        from_attributes = True
+
+class TeamSquadKeeperAdvAgainst(Base):
+    """Team squad keeper advanced against stats."""
+    
+    __tablename__ = 'team_squad_keeper_adv_against'
+
+    id = Column(Integer, primary_key=True, index=True)
+    competition_id = Column(Integer, ForeignKey("competitions.id"), nullable=False, index=True)
+    team_id = Column(Integer, ForeignKey("teams.id"), nullable=False, index=True)
+    season = Column(String(20), nullable=False, index=True)
+    free_kick_goals_against = Column(Integer)
+    corner_kick_goals_against = Column(Integer)
+    own_goals_against = Column(Integer)
+    post_shot_xg = Column(Float)
+    post_shot_xg_per_shot_ot = Column(Float)
+    post_shot_xg_minus_goals_allowed = Column(Float)
+    post_shot_xg_minus_goals_allowed_90s = Column(Float)
+    completed_long_balls = Column(Integer)
+    attempted_long_balls = Column(Integer)
+    long_balls_completed_percentage = Column(Float)
+    passes_attempted = Column(Integer)
+    throws_attempted = Column(Integer)
+    launch_percentage = Column(Float)
+    avg_pass_length = Column(Float)
+    goal_kicks = Column(Integer)
+    goal_kicks_launched_percentage = Column(Float)
+    goal_kicks_avg_length = Column(Float)
+    crosses_faced = Column(Integer)
+    crosses_stopped = Column(Integer)
+    crosses_stopped_percentage = Column(Float)
+    def_actions_outside_of_penalty_area = Column(Integer)
+    def_actions_outside_of_penalty_area_90s = Column(Float)
+    avg_def_action_dist = Column(Float)
+    
+    scraped_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Relationships
+    competition = relationship("Competition")
+    team = relationship("Team")
+
+    def __repr__(self):
+        return f"<TeamSquadKeeperAdvAgainst(id={self.id}, squad='{self.squad}', season='{self.season}'>"
+
+    class Config:
+        from_attributes = True
