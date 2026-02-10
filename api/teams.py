@@ -3,7 +3,7 @@ from typing import List, Optional
 from pydantic import BaseModel
 from datetime import date, time
 
-from services.team_percentiles import get_team_percentiles
+from services.team_rank import get_team_rank
 from services.team_matches import get_team_matches
 from services.match_formatter import format_team_matches_response
 from database.config import get_db_session
@@ -91,7 +91,7 @@ async def get_interesting_team_data(
     session = get_db_session()
     
     try:
-        return get_team_percentiles(session, team_name)
+        return get_team_rank(session, team_name)
     except HTTPException:
         raise
     except Exception as e:
