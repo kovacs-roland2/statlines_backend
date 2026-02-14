@@ -7,6 +7,7 @@ from services.team_rank import get_team_rank
 from services.team_matches import get_team_matches
 from services.match_formatter import format_team_matches_response
 from database.config import get_db_session
+from database.models import Team
 
 # Create router for team-related endpoints
 router = APIRouter(prefix="/api/teams", tags=["teams"])
@@ -16,6 +17,13 @@ class TeamInfo(BaseModel):
     id: int
     name: str
     short_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class TeamListResponse(BaseModel):
+    teams: List[TeamInfo]
+    total_teams: int
 
     class Config:
         from_attributes = True
@@ -47,6 +55,27 @@ class TeamMatchesResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+@router.get("", response_model=TeamListResponse)
+async def get_all_teams():
+    """
+    Get all available teams.
+    
+    Returns:
+        TeamListResponse with list of all teams and total count
+    """
+    session = get_db_session()
+    
+    try:
+        teams = session.query(Team).order_by(Team.name).all()
+        return TeamListResponse(
+            teams=teams,
+            total_teams=len(teams)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    finally:
+        session.close()
 
 @router.get("/{team_name}/matches", response_model=TeamMatchesResponse)
 async def get_team_matches_endpoint(

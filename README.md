@@ -230,8 +230,8 @@ python -m pytest test/
 
 - `GET /`: Welcome message
 - `GET /health`: Health check endpoint
-- `GET /teams`: List all teams
-- `GET /matches`: List matches with filtering options
+- `GET api/teams`: List all teams
+- `GET api/matches`: List matches with filtering options
 
 
 ### Get Team Matches
