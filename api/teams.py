@@ -2,16 +2,12 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional
 from pydantic import BaseModel
 from datetime import date, time
-import sys
-import os
 
-# Add the parent directory to the path so we can import from database
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+from services.team_rank import get_team_rank
+from services.team_matches import get_team_matches
+from services.match_formatter import format_team_matches_response
 from database.config import get_db_session
-from database.models import Match, Team
-from sqlalchemy.orm import joinedload
-from sqlalchemy import or_, desc
+from database.models import Team
 
 # Create router for team-related endpoints
 router = APIRouter(prefix="/api/teams", tags=["teams"])
@@ -21,6 +17,16 @@ class TeamInfo(BaseModel):
     id: int
     name: str
     short_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class TeamListResponse(BaseModel):
+    teams: List[TeamInfo]
+    total_teams: int
+
+    class Config:
+        from_attributes = True
 
 class MatchResponse(BaseModel):
     id: int
@@ -39,13 +45,40 @@ class MatchResponse(BaseModel):
     competition: str
     is_home_match: bool
 
+    class Config:
+        from_attributes = True
+
 class TeamMatchesResponse(BaseModel):
     team_name: str
     matches: List[MatchResponse]
     total_matches_found: int
 
+    class Config:
+        from_attributes = True
+
+@router.get("", response_model=TeamListResponse)
+async def get_all_teams():
+    """
+    Get all available teams.
+    
+    Returns:
+        TeamListResponse with list of all teams and total count
+    """
+    session = get_db_session()
+    
+    try:
+        teams = session.query(Team).order_by(Team.name).all()
+        return TeamListResponse(
+            teams=teams,
+            total_teams=len(teams)
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    finally:
+        session.close()
+
 @router.get("/{team_name}/matches", response_model=TeamMatchesResponse)
-async def get_team_matches(
+async def get_team_matches_endpoint(
     team_name: str,
     limit: int = Query(default=5, ge=1, le=20, description="Number of matches to return (1-20)")
 ):
@@ -62,76 +95,35 @@ async def get_team_matches(
     session = get_db_session()
     
     try:
-        # Find the team (case-insensitive partial match)
-        team = session.query(Team).filter(
-            or_(
-                Team.name.ilike(f"%{team_name}%"),
-                Team.short_name.ilike(f"%{team_name}%")
-            )
-        ).first()
-        
-        if not team:
-            raise HTTPException(
-                status_code=404, 
-                detail=f"Team '{team_name}' not found. Please check the team name and try again."
-            )
-        
-        # Get the team's matches (both home and away) with all related data
-        matches = session.query(Match).options(
-            joinedload(Match.home_team),
-            joinedload(Match.away_team),
-            joinedload(Match.competition)
-        ).filter(
-            or_(
-                Match.home_team_id == team.id,
-                Match.away_team_id == team.id
-            )
-        ).order_by(
-            desc(Match.match_date),
-            desc(Match.match_time)
-        ).limit(limit).all()
-        
-        # Format the response
-        match_responses = []
-        for match in matches:
-            is_home_match = match.home_team_id == team.id
-            
-            match_response = MatchResponse(
-                id=match.id,
-                match_date=match.match_date,
-                match_time=match.match_time,
-                week_number=match.week_number,
-                home_team=TeamInfo(
-                    id=match.home_team.id,
-                    name=match.home_team.name,
-                    short_name=match.home_team.short_name
-                ),
-                away_team=TeamInfo(
-                    id=match.away_team.id,
-                    name=match.away_team.name,
-                    short_name=match.away_team.short_name
-                ),
-                home_score=match.home_score,
-                away_score=match.away_score,
-                home_xg=float(match.home_xg) if match.home_xg else None,
-                away_xg=float(match.away_xg) if match.away_xg else None,
-                venue=match.venue,
-                attendance=match.attendance,
-                referee=match.referee,
-                competition=match.competition.name if match.competition else "Unknown",
-                is_home_match=is_home_match
-            )
-            match_responses.append(match_response)
-        
-        return TeamMatchesResponse(
-            team_name=team.name,
-            matches=match_responses,
-            total_matches_found=len(match_responses)
-        )
-        
+        team, matches = get_team_matches(session, team_name, limit)
+        return format_team_matches_response(team, matches)
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     finally:
-        session.close() 
+        session.close()
+
+@router.get("/interesting_team_data")
+async def get_interesting_team_data(
+    team_name: str = Query(..., description="Team name (case-insensitive, partial match supported)")
+):
+    """
+    Get team percentile values for each stat column in the squad standard table.
+    
+    Args:
+        team_name: Name of the team (case-insensitive, partial match supported)
+    
+    Returns:
+        Dictionary with stat column names as keys and percentile values as values
+    """
+    session = get_db_session()
+    
+    try:
+        return get_team_rank(session, team_name)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    finally:
+        session.close()

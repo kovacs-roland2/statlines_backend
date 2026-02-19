@@ -2,21 +2,21 @@
 
 A FastAPI-based backend service for football statistics and data analysis. This project scrapes football data, stores it in PostgreSQL, and provides REST API endpoints for data access and analysis.
 
-## 🏗️ Project Architecture
+## Project Architecture
 
-- **FastAPI**: Modern Python web framework for building APIs
+- **FastAPI**: Python web framework for building APIs
 - **PostgreSQL**: Primary database for storing football statistics
 - **SQLAlchemy**: ORM for database operations
 - **Web Scrapers**: Automated data collection from football websites
 - **Docker**: Optional containerization for production deployment
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Python 3.8+
 - PostgreSQL (local installation) OR Docker
 - Git
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone and Setup Virtual Environment
 
@@ -88,13 +88,12 @@ uvicorn main:app --reload
 
 The API will be available at `http://localhost:8000`
 
-## 📚 API Documentation
+## API Documentation
 
 Once running, access the interactive documentation:
 - **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
 
-## 🗄️ Database Management
+## Database Management
 
 ### View Database with DBeaver
 
@@ -110,7 +109,7 @@ Connect to your database using these settings:
 - **Teams Table**: Premier League teams with names, short codes
 - **Matches Table**: Match results, scores, statistics, xG data
 
-## 🕷️ Web Scrapers
+## Web Scrapers
 
 The project includes scrapers for collecting football data:
 
@@ -120,7 +119,7 @@ python scrapers/match_scraper.py
 python scrapers/team_scraper.py
 ```
 
-## 🔧 Development Commands
+## Development Commands
 
 ### Start Everything
 ```bash
@@ -152,7 +151,7 @@ sudo systemctl status postgresql      # Linux
 psql -U postgres -d statlines_dev
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 statlines_backend/
@@ -179,7 +178,7 @@ statlines_backend/
 └── README.md         # This file
 ```
 
-## 🌍 Environment Configuration
+## Environment Configuration
 
 The project uses environment variables for configuration. Key files:
 
@@ -197,7 +196,7 @@ The project uses environment variables for configuration. Key files:
 | `API_PORT` | API server port | `8000` |
 | `LOG_LEVEL` | Logging level | `DEBUG` |
 
-## 🐳 Docker Usage
+## Docker Usage
 
 ### Development with Docker
 ```bash
@@ -217,7 +216,7 @@ docker-compose down
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Test database connection
@@ -227,50 +226,13 @@ python test_db.py
 python -m pytest test/
 ```
 
-## 🔍 Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Failed**
-   - Check if PostgreSQL is running: `brew services list | grep postgresql`
-   - Verify connection details in `.env`
-   - Test connection: `python test_db.py`
-
-2. **Docker Issues**
-   - Ensure Docker is running
-   - Check container status: `docker ps`
-   - View logs: `docker-compose logs`
-
-3. **Import Errors**
-   - Activate virtual environment: `source venv/bin/activate`
-   - Install dependencies: `pip install -r requirements.txt`
-
-4. **Port Already in Use**
-   - Change `API_PORT` in `.env`
-   - Or stop conflicting process: `lsof -ti:8000 | xargs kill -9`
-
-## 📊 Available Endpoints
+## Available Endpoints
 
 - `GET /`: Welcome message
 - `GET /health`: Health check endpoint
-- `GET /teams`: List all teams
-- `GET /matches`: List matches with filtering options
+- `GET api/teams`: List all teams
+- `GET api/matches`: List matches with filtering options
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## 📝 License
-
-This project is licensed under the MIT License.
-
-## API Endpoints
-
-The backend provides a REST API for accessing match data. The server runs on `http://localhost:8000` by default.
 
 ### Get Team Matches
 
@@ -281,197 +243,3 @@ Returns the last N matches for a specific team.
 **Parameters**:
 - `team_name` (path): Name of the team (case-insensitive, partial match supported)
 - `limit` (query, optional): Number of matches to return (default: 5, max: 20)
-
-**Example Requests**:
-```bash
-# Get Arsenal's last 5 matches
-curl "http://localhost:8000/api/teams/Arsenal/matches"
-
-# Get Liverpool's last 3 matches (partial name match)
-curl "http://localhost:8000/api/teams/liver/matches?limit=3"
-
-# Get Manchester City's last 10 matches
-curl "http://localhost:8000/api/teams/Manchester%20City/matches?limit=10"
-```
-
-**Example Response**:
-```json
-{
-  "team_name": "Arsenal",
-  "matches": [
-    {
-      "id": 375,
-      "match_date": "2025-05-25",
-      "match_time": "16:00:00",
-      "week_number": 38,
-      "home_team": {
-        "id": 22,
-        "name": "Southampton",
-        "short_name": "SOU"
-      },
-      "away_team": {
-        "id": 1,
-        "name": "Arsenal",
-        "short_name": "ARS"
-      },
-      "home_score": 1,
-      "away_score": 2,
-      "home_xg": 0.6,
-      "away_xg": 2.3,
-      "venue": "St Mary's Stadium",
-      "attendance": 31289,
-      "referee": "Darren Bond",
-      "competition": "Premier League",
-      "is_home_match": false
-    }
-  ],
-  "total_matches_found": 1
-}
-```
-
-### API Documentation
-
-Interactive API documentation is available at:
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
-
-## Frontend Integration
-
-### Next.js Example
-
-Here's how to integrate the API with a Next.js frontend:
-
-```typescript
-// types/match.ts
-export interface TeamInfo {
-  id: number;
-  name: string;
-  short_name?: string;
-}
-
-export interface Match {
-  id: number;
-  match_date: string;
-  match_time?: string;
-  week_number?: number;
-  home_team: TeamInfo;
-  away_team: TeamInfo;
-  home_score?: number;
-  away_score?: number;
-  home_xg?: number;
-  away_xg?: number;
-  venue?: string;
-  attendance?: number;
-  referee?: string;
-  competition: string;
-  is_home_match: boolean;
-}
-
-export interface TeamMatchesResponse {
-  team_name: string;
-  matches: Match[];
-  total_matches_found: number;
-}
-```
-
-```typescript
-// lib/api.ts
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-export async function getTeamMatches(
-  teamName: string, 
-  limit: number = 5
-): Promise<TeamMatchesResponse> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/teams/${encodeURIComponent(teamName)}/matches?limit=${limit}`
-  );
-  
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Failed to fetch team matches');
-  }
-  
-  return response.json();
-}
-```
-
-```tsx
-// components/TeamMatches.tsx
-import { useState, useEffect } from 'react';
-import { getTeamMatches, TeamMatchesResponse } from '../lib/api';
-
-interface TeamMatchesProps {
-  teamName: string;
-}
-
-export default function TeamMatches({ teamName }: TeamMatchesProps) {
-  const [data, setData] = useState<TeamMatchesResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function fetchMatches() {
-      try {
-        setLoading(true);
-        const result = await getTeamMatches(teamName, 5);
-        setData(result);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchMatches();
-  }, [teamName]);
-
-  if (loading) return <div>Loading matches...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!data) return <div>No data found</div>;
-
-  return (
-    <div>
-      <h2>{data.team_name} - Recent Matches</h2>
-      <div className="matches-list">
-        {data.matches.map((match) => (
-          <div key={match.id} className="match-card">
-            <div className="match-date">
-              {new Date(match.match_date).toLocaleDateString()}
-            </div>
-            <div className="match-teams">
-              {match.home_team.name} {match.home_score ?? '?'} - {match.away_score ?? '?'} {match.away_team.name}
-            </div>
-            <div className="match-details">
-              {match.venue && <span>📍 {match.venue}</span>}
-              {match.attendance && <span>👥 {match.attendance.toLocaleString()}</span>}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-```
-
-### React Query Integration
-
-For better caching and state management:
-
-```typescript
-// hooks/useTeamMatches.ts
-import { useQuery } from '@tanstack/react-query';
-import { getTeamMatches } from '../lib/api';
-
-export function useTeamMatches(teamName: string, limit: number = 5) {
-  return useQuery({
-    queryKey: ['teamMatches', teamName, limit],
-    queryFn: () => getTeamMatches(teamName, limit),
-    enabled: !!teamName,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-}
-```
-
----
-
-**Need Help?** Check the troubleshooting section or create an issue in the repository. 
